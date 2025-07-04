@@ -90,14 +90,14 @@ def contour_centroids_by_row(binary_img, step=20):
 
     return overlay
 
-# 메인 함수
+# 메인 함수C:\Users\허윤\Desktop\대외활동\미래제품연구회\자율주행\자율주행_코드\autonomous-driving-contest\media_file\vod_test.mp4
 def main():
     src_pts = np.array([[170, 290], [440, 290], [564, 390], [80, 390]], dtype=np.float32)
-    cap = cv2.VideoCapture('vod_test.mp4')
+    cap = cv2.VideoCapture(r'C:\Users\허윤\Desktop\대외활동\미래제품연구회\자율주행\자율주행_코드\autonomous-driving-contest\media_file\vod_test.mp4')
     fps = cap.get(cv2.CAP_PROP_FPS)
-    delay = int(3000 / fps) if fps > 0 else 30
+    delay = int(1000 / fps) if fps > 0 else 30
 
-    pid = PIDController(kp=0.4, ki=0.0, kd=0.05)
+    pid = PIDController(kp=0.5, ki=0.0, kd=0.05)
     prev_cx = None
 
     while True:
