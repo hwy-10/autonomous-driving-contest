@@ -1,0 +1,5 @@
+train: ./car_line/images  # 또는 절대경로 : 해당 폴더에서 이미지를 훈련(train)용으로 사용하라는 의미
+val: ./car_line/images    # 검증 데이터로 사용하는 이미지가 저장되어 있는
+
+nc: 2 # 클래스 수를 의미 
+names: ['car', 'line']  #클래스 이름을 의미
