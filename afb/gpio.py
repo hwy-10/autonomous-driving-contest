@@ -4,13 +4,21 @@ import lgpio
 import atexit
 from ._gpio_pins import PINS # afb/ _gpio_pins.py에서 정의한 핀 번호들을 가져옴
 # Create global lgpio instance
-pi = lgpio.gpiochip_open(0)
-atexit.register(lambda: stop_all()) # 종료 루틴
+pi = None
+atexit.register(lambda: stop_all()) # 종료 루틴 
+# lgpio는 GPIO 핀을 제어하기 위한 라이브러리로, GPIO 핀을 직접 제어할 수 있게 해줌
+"""
+수정 조금 이따가 하자.
+"""
 
 # Initialization
 def init():
     # Motor pins
-    for pin in [PINS.M1_IN1, PINS.M1_IN2, PINS.M1_PWM, # PWM : 속도 제어 IN1, IN2 : 방향 제어 STBY : 모터 활성화   
+    global pi
+    if pi is None:
+        pi = lgpio.gpiochip_open(0)
+        print("[gpio] GPIO 초기화 완료")
+    for pin in [PINS.M1_IN1, PINS.M1_IN2, PINS.M1_PWM, # PWM : 속도 제어 IN1, IN2 : 방향 제어 STBY : 모터 활성화
                 PINS.M2_IN1, PINS.M2_IN2, PINS.M2_PWM, PINS.STBY]:
         lgpio.gpio_claim_output(pi, pin, 0) # 핀을 출력으로 사용하겠다고 OS에 등록
 
