@@ -11,7 +11,7 @@ class Status(Enum) :
     stop = 3
 
 status = Status.go # 초기 상태를 전진(go)로 설정
-afb.gpio.init() # GPIO 초기화 및 global.pi 설정 
+afb.gpio.init() # GPIO 초기화 및 global.pi 설정
 
 stop_count = 0
 stop_threshold = 3
