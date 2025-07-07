@@ -20,11 +20,6 @@ def rear_backward(speed = 0, angle = 90):
         lgpio.gpio_write(gpio.pi, IN2, 0)
 
     duty = min(abs(speed), 255) / 255 * 100.0
-    lgpio.tx_pwm(pi, PWM, 1000, duty)
+    lgpio.tx_pwm(gpio.pi, PWM, 1000, duty)
 
-    gpio.servo(angle) # 서보 모터 각도 제어
-"""
-해당 코드에서는 lgpio 라이브러리를 사용하여 모터를 제어한다. 
-speed를 통해 모터의 속도를 설정한다.
-angle의 경우, afb/gpio.py에서 정의된 메소드를 사용하여 서보 모터의 각도를 제어한다.
-"""
+    gpio.servo(angle) # 서보모터 제어
