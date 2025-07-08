@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 import math
+import os
+from glob import glob
 
 # --- PID Controller ---
 class PIDController:
@@ -19,7 +21,6 @@ class PIDController:
         self.prev_error = error
         return current + output
 
-# --- 벡터 기반 방향 판단 ---
 def get_direction_by_angle(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(gray, 50, 150)
@@ -44,7 +45,6 @@ def get_direction_by_angle(frame):
     else:
         return "Left"
 
-# --- BEV 변환 ---
 def warp_image(image, src_pts, dst_size=(640, 480)):
     width, height = dst_size
     dst_pts = np.array([[0, 0], [width - 1, 0], [width - 1, height - 1], [0, height - 1]], dtype=np.float32)
@@ -52,7 +52,6 @@ def warp_image(image, src_pts, dst_size=(640, 480)):
     warped = cv2.warpPerspective(image, M, dst_size)
     return warped, M
 
-# --- 중심선 방향 판단 (Canny 기반) ---
 def get_direction_from_cx(cx, frame_width):
     mid = frame_width // 2
     error = cx - mid
@@ -66,23 +65,23 @@ def get_direction_from_cx(cx, frame_width):
 # --- Main ---
 def main():
     src_pts = np.array([[170, 290], [440, 290], [564, 390], [80, 390]], dtype=np.float32)
-    cap = cv2.VideoCapture("media_file/vod_test.mp4")
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    delay = int(1000 / fps) if fps > 0 else 30
     pid = PIDController(kp=0.5, ki=0.0, kd=0.05)
     prev_cx = None
+    image_files = sorted(glob("autonomous-driving-contest/media_file/안녕/frame_20250630_124117.jpg"))  # .png 도 가능하면 *.jpg -> *.*
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+    for image_path in image_files:
+        frame = cv2.imread(image_path)
+        if frame is None:
+            print(f"Failed to load image: {image_path}")
+            continue
+
         frame = cv2.resize(frame, (640, 480))
         warped, M = warp_image(frame, src_pts)
         gray = cv2.cvtColor(warped, cv2.COLOR_BGR2GRAY)
         blur = cv2.GaussianBlur(gray, (5, 5), 1.5)
         edges = cv2.Canny(blur, 40, 120)
 
-        # --- 중심선 가중 평균 계산 ---
+        # 중심선 가중 평균 계산
         target_y_list = [(370, 10), (360, 5), (350, 3), (340, 2)]
         weighted_sum, total_weight, cy_roi = 0, 0, None
         for y_val, weight in target_y_list:
@@ -96,22 +95,21 @@ def main():
                 cy_roi = cy
         if total_weight == 0:
             continue
+
         cx_weighted = int(weighted_sum / total_weight)
         smooth_cx = int(pid.update(prev_cx or cx_weighted, cx_weighted))
         prev_cx = smooth_cx
 
-        # --- 방향 판단 ---
         canny_direction = get_direction_from_cx(smooth_cx, 640)
         vector_direction = get_direction_by_angle(frame)
-        
+
         if canny_direction == vector_direction:
             final_direction = canny_direction
             agreement = True
         else:
-            final_direction = "Straight"  # 충돌 시 무조건 직진
+            final_direction = "Straight"
             agreement = False
 
-        # --- 시각화 ---
         result_frame = frame.copy()
         color = (0, 255, 0) if agreement else (0, 0, 255)
         cv2.circle(result_frame, (smooth_cx, cy_roi), 6, color, -1)
@@ -122,10 +120,8 @@ def main():
         cv2.putText(result_frame, f"Final: {final_direction}", (30, 100),
                     cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 2)
 
-        # --- 가상 주행 경로 그리기 ---
         h, w, _ = result_frame.shape
         start_point = (w // 2, h - 50)
-
         if final_direction == "Straight":
             end_point = (start_point[0], start_point[1] - 100)
         elif final_direction == "Left":
@@ -133,19 +129,17 @@ def main():
         elif final_direction == "Right":
             end_point = (start_point[0] + 60, start_point[1] - 100)
         else:
-            end_point = (start_point[0], start_point[1])  # no movement
+            end_point = (start_point[0], start_point[1])
 
-        cv2.arrowedLine(result_frame, start_point, end_point,
-                        color, 4, tipLength=0.3)
+        cv2.arrowedLine(result_frame, start_point, end_point, color, 4, tipLength=0.3)
         cv2.putText(result_frame, "Planned Path", (start_point[0] - 50, start_point[1] + 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
 
         cv2.imshow("Direction Decision Fusion", result_frame)
+        print("Press any key to continue...")  # 디버깅 시 유용
+        cv2.waitKey(100000000)  # 사용자가 키를 눌러야 다음 이미지로 넘어감
 
-        if cv2.waitKey(delay) & 0xFF == ord('q'):
-            break
 
-    cap.release()
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
