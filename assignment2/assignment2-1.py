@@ -4,8 +4,9 @@ from ultralytics import YOLO
 # 1. 모델 로드
 try:
     print("🚀 YOLOv8 모델 로드 중...")
-    model_v8 = YOLO('autonomous-driving-contest/yolov8n.pt')
+    model_v8 = YOLO('C:/Users/허윤/Desktop/대외활동/미래제품연구회/자율주행/자율주행_코드/autonomous-driving-contest/assignment2/traffic_light/best.pt')
     print("✅ 모델 로드 완료")
+    print(model_v8.names)
 except Exception as e:
     print("❌ 모델 로드 실패:", e)
     exit()
@@ -13,6 +14,7 @@ except Exception as e:
 # 2. 영상 로드
 video_path = "C:/Users/허윤/Desktop/대외활동/미래제품연구회/자율주행/자율주행_코드/autonomous-driving-contest/media_file/traffic_light.mp4"
 cap = cv2.VideoCapture(video_path)
+
 if not cap.isOpened():
     print("❌ 비디오 로드 실패:", video_path)
     exit()
@@ -36,22 +38,15 @@ while cap.isOpened():
 
     # YOLOv8 예측
     try:
-        results = model_v8(frame_v8)[0]
-        boxes = results.boxes
-
-        if boxes is not None and boxes.xyxy is not None:
-            for i in range(len(boxes)):
-                # Tensor를 numpy로 변환 후 처리
-                cls_id = int(boxes.cls[i].item())     
-                conf = float(boxes.conf[i].item())
-                x1, y1, x2, y2 = map(int, boxes.xyxy[i].tolist())
-                label = model_v8.names[cls_id] if cls_id in model_v8.names else str(cls_id)
-                print(cls_id)
-                print(conf)
-
-                cv2.rectangle(frame_v8, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                cv2.putText(frame_v8, f"{label} {conf:.2f}", (x1, y1 - 10),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1)
+        results_v8 = model_v8(frame_v8)[0]
+        for box in results_v8.boxes:
+            cls_id = int(box.cls[0])
+            conf = float(box.conf[0])
+            label = model_v8.names[cls_id]
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
+            cv2.rectangle(frame_v8, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(frame_v8, f"{label} {conf:.2f}", (x1, y1 - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1)
     except Exception as e:
         print("❌ YOLOv8 예측 오류:", e)
 
