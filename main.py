@@ -16,6 +16,8 @@ afb.gpio.init() # GPIO 초기화 및 global.pi 설정
 stop_count = 0
 stop_threshold = 3
 
+afb.camera.init(640, 480, 30) # 카메라 초기화를 진행해줌
+
 try:
     while True:
         # Flask 웹서버 안열어도 되고, # 카메라 입력 필요없음
