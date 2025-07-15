@@ -6,7 +6,7 @@ from collections import deque, Counter
 model = YOLO("yolov8n.pt")
 
 # 2. 비디오 로드
-video_path = "C:/Users/허윤/Desktop/__상위 폴더/대외활동/미래제품연구회/자율주행/자율주행_코드/autonomous-driving-contest/media_file/traffic_light.mp4"
+video_path = 'media_file/traffic_light.mp4'
 cap = cv2.VideoCapture(video_path)
 if not cap.isOpened():
     print("❌ 비디오 열기 실패:", video_path)
