@@ -7,9 +7,17 @@ import camera
 from enum import Enum
 
 class Status(Enum) :
-    go = 1
-    back = 2
-    stop = 3
+    go = 0
+    left = 1
+    right = 2
+    back = 3
+    stop = 4
+    avoid = 5
+    accelerate = 6
+    decelerate = 7
+
+# back은 openCV로만 구현 -> 이후 CNN으로도 구현해야 한다면, 구현하기
+# CNN: go, left, right, stop, avoid, accel, decel 총 7개 상태
 
 status = Status.go # 초기 상태를 전진(go)로 설정
 afb.gpio.init() # GPIO 초기화 및 global.pi 설정
@@ -28,6 +36,7 @@ try:
         openCV_speed, openCV_angle, openCV_status = """vision/openCV로 받는 데이터 : return speed, steering_angle"""
         CNN_speed, CNN_angle, CNN_status = """"vison/CNN로 받는 데이터 return speed,steering_angle, status""" 
         
+        # status 결정 코드
         if CNN_status == Status.stop:
             stop_count += 1
             if stop_count >= stop_threshold:
@@ -44,41 +53,27 @@ try:
             stop_count = 0
 
         match status : 
-            case Status.stop :
-                motor.front_stop()
-                motor.rear_stop() 
-            case Status.go :
+            case Status.go : 
                 motor.front_forward()
                 motor.rear_forward()
+            case Status.left : 
+                """ left code """
+            case Status.right : 
+                """ right code """
             case Status.back :
                 motor.front_backward()
                 motor.rear_backward()
-
+            case Status.stop :
+                motor.front_stop()
+                motor.rear_stop() 
+            case Status.avoid:
+                """ avoid code """
+            case Status.accelerate:
+                """ accel code """
+            case Status.decelerate:
+                """ decel code """
 except KeyboardInterrupt: # 
     print("사용자 종료")
 
 finally:
     afb.gpio.stop_all()
-
-
-"""
-
-
-
-"""
-
-
-"""
-class: YOLO
-1) 좌회전 
-2) 직진 
-3) 우회전
-4) 언덕(가속)
-5) 언덕(감속)
-6) 표지판 : 우회전
-7) 표지판 : 좌회전
-8) 표지판 : 터널 
-9) 동적장애물 : 정지
-10) 신호등
-11) 정적장애물(차)
-"""
