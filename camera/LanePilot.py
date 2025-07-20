@@ -7,11 +7,9 @@ CENTER_X = WIDTH // 2
 AREA_THRESHOLD = 1000
 ROI_VERT_START = HEIGHT // 2
 
-# HSV 범위 (흰색 & 노란색 차선)
+# HSV 범위 (흰색 차선만)
 WHITE_LOWER = np.array([0, 0, 200])
 WHITE_UPPER = np.array([180, 30, 255])
-YELLOW_LOWER = np.array([15, 100, 100])
-YELLOW_UPPER = np.array([40, 255, 255])
 
 kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))   # 모폴로지 연산용 커널
 last_center = None  # 무게중심의 스무딩(이동평균)을 위한 이전값 저장
@@ -20,9 +18,7 @@ def preprocess(image):
     # ROI: 화면 하단부만 사용
     roi = image[ROI_VERT_START:, :]
     hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
-    mask_w = cv2.inRange(hsv, WHITE_LOWER, WHITE_UPPER)
-    mask_y = cv2.inRange(hsv, YELLOW_LOWER, YELLOW_UPPER)
-    mask = cv2.bitwise_or(mask_w, mask_y)
+    mask = cv2.inRange(hsv, WHITE_LOWER, WHITE_UPPER)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
     return mask
