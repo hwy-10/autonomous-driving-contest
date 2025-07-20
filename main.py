@@ -16,6 +16,7 @@ class Status(Enum) :
     accelerate = 6
     decelerate = 7
 
+
 # back은 openCV로만 구현 -> 이후 CNN으로도 구현해야 한다면, 구현하기
 # CNN: go, left, right, stop, avoid, accel, decel 총 7개 상태
 
@@ -27,30 +28,51 @@ stop_threshold = 3
 
 afb.camera.init(640, 480, 30) # 카메라 초기화를 진행해줌
 
+
+def decide_final_status(cv_status, cnn_status, stop_count, stop_threshold = 3):
+    PRIORITY_RULES = [
+        ("cnn", Status.stop),
+        ("both", Status.go),
+        ("cnn", Status.avoid),
+        ("cnn", Status.left),
+        ("cnn", Status.right),
+        ("cnn", Status.accelerate),
+        ("cnn", Status.decelerate),
+        ("cv", Status.left),
+        ("cv", Status.right),
+    ]
+    # 1. stop 누적 판단 따로 처리
+    if cnn_status == Status.stop:
+        stop_count += 1
+        if stop_count >= stop_threshold:
+            return Status.stop, stop_count
+        else:
+            return None, stop_count
+
+    # 2. 우선순위 순회
+    for source, rule_status in PRIORITY_RULES:
+        if source == "cnn" and cnn_status == rule_status:
+            return rule_status, 0
+        if source == "cv" and cv_status == rule_status:
+            return rule_status, 0
+        if source == "both" and cnn_status == rule_status and cv_status == rule_status:
+            return rule_status, 0
+
+    return Status.go, 0
+
+
 try:
     while True:
         # Flask 웹서버 안열어도 되고, # 카메라 입력 필요없음
         # 여기에 카메라 입력을 받아서 처리하는 코드 작성
         # openCV 인자를 받음 A가 만들어라
         # CNN 인자를 받음 B가 만들어라
-        openCV_speed, openCV_angle, openCV_status = """vision/openCV로 받는 데이터 : return speed, steering_angle"""
-        CNN_speed, CNN_angle, CNN_status = """"vison/CNN로 받는 데이터 return speed,steering_angle, status""" 
+        # 메소드 def decide_final_status를 통해 status 결정하기
+        cv_status =  """vision/openCV로 받는 데이터 : return speed, steering_angle"""
+        cnn_status = """"vison/CNN로 받는 데이터 return speed,steering_angle, status""" 
+        status, stop_count = decide_final_status(cv_status, cnn_status, stop_count) # status 결정 match문에 사용
+        # stop이 아니라면, stop count를 reset 해주는 코드를 작성해두기
         
-        # status 결정 코드
-        if CNN_status == Status.stop:
-            stop_count += 1
-            if stop_count >= stop_threshold:
-                status = Status.stop
-        # match 실행을 위해 continue하지 않음
-        # 그대로 내려가서 stop 명령 실행
-            else:
-                continue  # 아직 임계치 미만이면 다음 루프로 넘어감
-
-        elif openCV_status == Status.go and CNN_status == Status.go : 
-            status = Status.go
-            stop_count = 0
-        else :  # 이후에 더 go, back, stop 상태 세분화할 것
-            stop_count = 0
 
 
 
