@@ -1,2 +1,9 @@
 roboflow_env/
 afb_venv/
+
+__pycache__/
+*.pyc
+env/
+venv/
+opencv1_env/
+.vscode/
