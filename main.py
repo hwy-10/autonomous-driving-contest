@@ -3,6 +3,7 @@ import afb
 import motor_control as motor # motor_control 모듈을 import하여 GPIO 초기화 및 모터 제어 기능을 부름
 import utills # 디버깅용
 import random
+import camera 
 from enum import Enum
 
 class Status(Enum) :
@@ -53,7 +54,7 @@ try:
                 motor.front_backward()
                 motor.rear_backward()
 
-except KeyboardInterrupt:
+except KeyboardInterrupt: # 
     print("사용자 종료")
 
 finally:
