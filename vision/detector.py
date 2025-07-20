@@ -1,30 +1,35 @@
 from obstacles.base import *
+from yolo_enum import YOLO_label
 
-def detect_obstacle_from_frame(frame):
-    """
-    frame을 분석하여 장애물 클래스를 반환한다.
-    예시를 위해 난수/조건으로 결정
-    """
-    detected_label = "right_sign"  # 예시: YOLO에서 나온 label 이름
-
-    if detected_label == "right_sign":
-        return TurnRight()
-    elif detected_label == "tunnel":
-        return Tunnel()
-    elif detected_label == "static_car":
-        return Obstacles("정적장애물", priority=3)
-    
-    elif detected_label == "dynamic_obstacle":
-        return DynamicObstacle("동적장애물", priority=5)
-
-    elif detected_label == "traffic_light":
-        return TrafficLight("red")  # 예시: 빨간불
-
-    elif detected_label == "static_car":
-        return StaticCar(distance=25) 
-    
-    # elif detected_labe == "":
-    #    return 
-
-    else:
-        return None  # 감지 안됨
+def label_to_obstacle(label: YOLO_label):
+     match label:
+        case YOLO_label.left | YOLO_label.sign_left:
+            return TurnLeft()
+        case YOLO_label.right | YOLO_label.sign_right:
+            return TurnRight()
+        case YOLO_label.hill_up:
+            return Uphill(direction="up")
+        case YOLO_label.hill_down:
+            return Uphill(direction="down")
+        case YOLO_label.sign_tunnel:
+            return Tunnel()
+        case YOLO_label.red_light:
+            return TrafficLight("red")
+        case YOLO_label.yellow_light:
+            return TrafficLight("yellow")
+        case YOLO_label.green_light:
+            return TrafficLight("green")
+        case YOLO_label.car:
+            return StaticCar(distance=20)  # 예: 거리 추정값 들어감
+        case YOLO_label.sign_stop:
+            return DynamicObstacle()
+        case _:
+            return None
+        
+# 감지된 YOLO class ID 중 최우선 클래스 선택
+def decide_highest_priority(detected_cls_ids):
+    from yolo_enum import PRIORITY
+    for label in PRIORITY:
+        if label.value in detected_cls_ids:
+            return label
+    return None

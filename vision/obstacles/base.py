@@ -1,4 +1,4 @@
-class Obstacles:
+class Obstacle:
     def __init__(self, label, priority = 0):
         self.label = label
         self.priority = priority
@@ -41,7 +41,7 @@ class DynamicObstacle(Obstacle):
         self.direction = direction # 향후 좌, 우 확장
         
     def action(self):
-        return "회피 행동 실행"
+        return "동적 장애물 감지 -> 정지"
 
 class TrafficLight(Obstacle):
     def __init__(self, color):
@@ -61,7 +61,7 @@ class TrafficLight(Obstacle):
 class StaticCar(Obstacle):
     def __init__(self, distance=None):
         super().__init__("정적장애물", priority=3)
-        self.distance = distance # 거리 정보 활용 가능
+        self.distance = distance # 거리 정보 활용 가능 (거리 센서 값 (cm))
 
     def action(self):
         if self.distance is not None and self.distance < 30:
