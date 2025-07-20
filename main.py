@@ -52,6 +52,9 @@ try:
         else :  # 이후에 더 go, back, stop 상태 세분화할 것
             stop_count = 0
 
+
+
+# 결정된 status로부터 차량을 제어하는 logic -> 구체적인 코드만 작성하면 됨
         match status : 
             case Status.go : 
                 motor.front_forward()
@@ -72,6 +75,10 @@ try:
                 """ accel code """
             case Status.decelerate:
                 """ decel code """
+
+
+
+
 except KeyboardInterrupt: # 
     print("사용자 종료")
 
