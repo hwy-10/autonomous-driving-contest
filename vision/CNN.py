@@ -48,14 +48,8 @@ PRIORITY = [
     YOLO_label.right   
 ]
 
-def _get_image(): # resize된 사진을 return 해주는 내부 함수
-    frame = camera.get_image
-    frame = cv2.resize(frame, (640, 480))
-    return frame
-
-def _detect_class_id():
+def _detect_class_id(frame):
     try:
-        frame = _get_image()
         if frame is None:
             print("❌ 프레임을 가져오지 못했습니다.")
             return []
@@ -81,11 +75,11 @@ def _detect_class_id():
         return []
 
 # 탐지된 class id 중에서 가장 우선순위가 높은 Enum 객체를 반환하는 함수
-def _decide_highest_priority(): # Enum 객체를 반환
+def _decide_highest_priority(frame): # Enum 객체를 반환
     """
     감지된 클래스 ID들 중에서 PRIORITY 리스트에서 가장 우선순위가 높은 것을 선택.
     """
-    detected_cls_ids = _detect_class_id()
+    detected_cls_ids = _detect_class_id(frame)
 
     for label in PRIORITY:
         if label.value in detected_cls_ids:
@@ -93,8 +87,8 @@ def _decide_highest_priority(): # Enum 객체를 반환
     return None  # 해당 없음
 
 # decide_hightest_priority를 통해 결정된 label을 넣어서 취해야할 action을 결정
-def get_cnn_status() -> Status:
-    label = _decide_highest_priority()
+def get_cnn_status(frame) -> Status:
+    label = _decide_highest_priority(frame)
 
     mapping = {
     YOLO_label.sign_stop: Status.stop,
