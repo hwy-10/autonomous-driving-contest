@@ -1,12 +1,11 @@
-from enum import Enum
-from config import Status
 from ultralytics import YOLO
+from enum import Enum
 
-model = YOLO("yolov8n.pt")  # YOLO 모델 로드
+"""
+YOLO 모델이 예측한 YOLO_label을 뱉어줌
+e.g> detected_cls_ids = [1, 9, 10]
+"""
 
-def detect_yolo_class_ids(frame):
-    results = model(frame)[0]  # YOLO 모델로부터 결과 추출
-    return [int(cls_id) for cls_id in results.boxes.cls.tolist()]
 
 
 class YOLO_label(Enum): # 크게 보면 go, back, stop 
@@ -22,7 +21,7 @@ class YOLO_label(Enum): # 크게 보면 go, back, stop
     red_light = 9
     yellow_light = 10
     green_light = 11
-    car = 12
+    car = 12 # 정적 장애물 
 # 차량 운행 알고리즘에 따라 label 변경 가능
 
 
@@ -47,64 +46,75 @@ PRIORITY = [
     YOLO_label.right   
 ]
 
+def _get_image(): # resize된 사진을 return 해주는 내부 함수
+    frame = camera.get_image
+    frame = cv2.resize(frame, (640, 480))
+    return frame
+
+def _detect_class_id():
+    try:
+        frame = _get_image()
+        if frame is None:
+            print("❌ 프레임을 가져오지 못했습니다.")
+            return []
+
+        result = model(frame)[0]
+        detected_cls_ids = []
+
+        for box in result.boxes:
+            cls_id = int(box.cls[0])
+            detected_cls_ids.append(cls_id)
+
+            conf = float(box.conf[0])
+            label = model.names[cls_id]
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(frame, f"{label} {conf:.2f}", (x1, y1 - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1)
+
+        return detected_cls_ids
+
+    except Exception as e:
+        print("❌ YOLO 예측 오류:", e)
+        return []
+
 # 탐지된 class id 중에서 가장 우선순위가 높은 Enum 객체를 반환하는 함수
-def decide_highest_priority(detected_cls_ids): # Enum 객체를 반환
+def _decide_highest_priority(): # Enum 객체를 반환
     """
     감지된 클래스 ID들 중에서 PRIORITY 리스트에서 가장 우선순위가 높은 것을 선택.
     """
+    detected_cls_ids = _detect_class_id()
+
     for label in PRIORITY:
         if label.value in detected_cls_ids:
             return label  # 가장 높은 우선순위 클래스 반환
     return None  # 해당 없음
 
 # decide_hightest_priority를 통해 결정된 label을 넣어서 취해야할 action을 결정
-# YoLo_label -> 행동 문자열 mapping
 def decide_action(label: YOLO_label) -> str:
     mapping = {
-    YOLO_label.sign_stop: "stop",
-    YOLO_label.red_light: "stop",
-    YOLO_label.car: "avoid",
+    YOLO_label.sign_stop: Status.stop,
+    YOLO_label.red_light: Status.stop,
+    YOLO_label.car: Status.avoid,
 
-    YOLO_label.yellow_light: "decelerate",
-    YOLO_label.green_light: "go",
+    YOLO_label.yellow_light: Status.decelerate,
+    YOLO_label.green_light: Status.go,
 
-    YOLO_label.sign_tunnel: "go", # 터널 표지판 시 action을 무엇을 할 지 의문
-    YOLO_label.sign_left: "left",
-    YOLO_label.sign_right: "go",
+    YOLO_label.sign_tunnel: Status.go, # 터널 표지판 시 action을 무엇을 할 지 의문
+    YOLO_label.sign_left: Status.left,
+    YOLO_label.sign_right: Status.right,
 
-    YOLO_label.hill_up: "accelerate",
-    YOLO_label.hill_down: "decelerate",
+    YOLO_label.hill_up: Status.accelerate,
+    YOLO_label.hill_down: Status.decelerate,
 
     YOLO_label.left: "left",
     YOLO_label.straight: "go",
     YOLO_label.right: "right"
 
 # all action: go, left, right, stop, avoid, accel, decel 총 7개 상태
+
     }
     return mapping.get(label, "go")
-
-def action_to_status(action: str) -> 'Status':
-     mapping = {
-        "go": Status.go,
-        "left": Status.left,
-        "right": Status.right,
-        "stop": Status.stop,
-        "avoid": Status.avoid,
-        "accelerate": Status.accelerate,
-        "decelerate": Status.decelerate
-    }
-    return mapping.get(action, Status.go)
-
-# 최종 CNN 기반 status 추출 함수
-def get_cnn_status(frame) -> Status:
-    detected_cls_ids = detect_yolo_class_ids(frame)  # YOLO로부터 감지된 클래스 ID 리스트
-    label = decide_highest_priority(detected_cls_ids)  # 가장 우선순위가 높은 label 선택
-    if label is None:
-        return Status.go
-    
-    action = decide_action(label)  # 해당 label에 따른 행동 결정
-    status = action_to_status(action)
-    return status
 
 """
 class: YOLO
