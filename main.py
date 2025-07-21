@@ -53,7 +53,7 @@ try:
                 frame = camera.get_image()
                 detections = CNN.detect_objects(frame)
                 obstacle = next((bbox for lbl, bbox in detections if lbl == CNN.YOLO_label.car), None)
-                obj_cx = LanePilot.CENTER_X if obstacle is None else obstacle[0] + obstacle[2] // 2
+                obj_cx = LanePilot.CENTER_X if obstacle is None else obstacle[0] + obstacle[2] // 2 
 
                 # 3) 장애물 반대 방향으로 회피 각도 계산
                 if obj_cx < LanePilot.CENTER_X:
