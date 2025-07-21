@@ -1,11 +1,15 @@
 import cv2
 import numpy as np
-from config import Status
+from enum import Enum
 
-# 조향 각도 관련 상수
-ANGLE_CENTER = 90
-MAX_ANGLE_OFFSET = 45  # 최대 조향 보정 각도
+# Define Status enum (mocked for testing purposes)
+class Status(Enum):
+    go = 0
+    left = 1
+    right = 2
+    stop = 3
 
+# PID Controller class
 class PIDController:
     def __init__(self, kp=0.5, ki=0.0, kd=0.1):
         self.kp = kp
@@ -22,8 +26,12 @@ class PIDController:
         self.prev_error = error
         return current + output
 
-# BEV 변환용 src 포인트 (영상 해상도 640x480 기준)
+# BEV transform source points
 src_pts = np.array([[170, 290], [440, 290], [564, 390], [80, 390]], dtype=np.float32)
+ANGLE_CENTER = 90
+MAX_ANGLE_OFFSET = 45
+pid = PIDController(kp=0.5, ki=0.0, kd=0.05)
+prev_cx = None
 
 def warp_image(image, src_pts, dst_size=(640, 480)):
     width, height = dst_size
@@ -32,11 +40,7 @@ def warp_image(image, src_pts, dst_size=(640, 480)):
     warped = cv2.warpPerspective(image, M, dst_size)
     return warped
 
-# 핵심 함수
-pid = PIDController(kp=0.5, ki=0.0, kd=0.05)
-prev_cx = None
-
-def get_cv_status(frame):
+def get_cv_status_debug(frame, show_debug=False):
     global prev_cx
     frame = cv2.resize(frame, (640, 480))
     bev = warp_image(frame, src_pts)
@@ -45,9 +49,9 @@ def get_cv_status(frame):
     blur = cv2.GaussianBlur(gray, (5, 5), 1.5)
     edges = cv2.Canny(blur, 40, 120)
 
-    # y좌표별 가중 평균 중심 계산
     target_y_list = [(370, 10), (360, 5), (350, 3), (340, 2)]
     weighted_sum, total_weight, cy_roi = 0, 0, None
+
     for y_val, weight in target_y_list:
         roi = edges[y_val:y_val+20, :]
         M_roi = cv2.moments(roi)
@@ -59,7 +63,7 @@ def get_cv_status(frame):
             cy_roi = cy
 
     if total_weight == 0:
-        return Status.go, ANGLE_CENTER  # 차선 인식 실패 → 직진
+        return Status.go, ANGLE_CENTER, frame  # Default fallback
 
     cx_weighted = int(weighted_sum / total_weight)
     smooth_cx = int(pid.update(prev_cx or cx_weighted, cx_weighted))
@@ -71,8 +75,19 @@ def get_cv_status(frame):
     angle = np.clip(angle, 45, 135)
 
     if error < -20:
-        return Status.left, angle
+        status = Status.left
     elif error > 20:
-        return Status.right, angle
+        status = Status.right
     else:
-        return Status.go, angle
+        status = Status.go
+
+    if show_debug:
+        debug_img = frame.copy()
+        cv2.circle(debug_img, (smooth_cx, cy_roi), 6, (0, 255, 0), -1)
+        cv2.putText(debug_img, f"Status: {status.name}", (30, 40),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
+        cv2.putText(debug_img, f"Angle: {angle}", (30, 80),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
+        return status, angle, debug_img
+
+    return status, angle, None
