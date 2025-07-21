@@ -1,12 +1,14 @@
 from ultralytics import YOLO
 from enum import Enum
-
+from . import camera
+import cv2
+from config import Status
 """
 YOLO 모델이 예측한 YOLO_label을 뱉어줌
 e.g> detected_cls_ids = [1, 9, 10]
 """
 
-
+model = YOLO("best.pt") # 이 YOLO 모델을 학습 시킬 예정
 
 class YOLO_label(Enum): # 크게 보면 go, back, stop 
     left = 0
@@ -85,13 +87,9 @@ def _decide_highest_priority(frame): # Enum 객체를 반환
     return None  # 해당 없음
 
 # decide_hightest_priority를 통해 결정된 label을 넣어서 취해야할 action을 결정
-<<<<<<< HEAD
 def get_cnn_status(frame) -> Status:
     label = _decide_highest_priority(frame)
 
-=======
-def decide_action(label: YOLO_label) -> str:
->>>>>>> origin
     mapping = {
     YOLO_label.sign_stop: Status.stop,
     YOLO_label.red_light: Status.stop,
@@ -107,29 +105,8 @@ def decide_action(label: YOLO_label) -> str:
     YOLO_label.hill_up: Status.accelerate,
     YOLO_label.hill_down: Status.decelerate,
 
-    YOLO_label.left: "left",
-    YOLO_label.straight: "go",
-    YOLO_label.right: "right"
-
-# all action: go, left, right, stop, avoid, accel, decel 총 7개 상태
-
+    YOLO_label.left: Status.left,
+    YOLO_label.straight: Status.go,
+    YOLO_label.right: Status.right
     }
-    return mapping.get(label, "go")
-
-"""
-class: YOLO
-1) 좌회전 
-2) 직진 
-3) 우회전
-4) 언덕(가속)
-5) 언덕(감속)
-6) 표지판 : 우회전
-7) 표지판 : 좌회전
-8) 표지판 : 터널 
-9) 동적장애물 : 정지
-10) 신호등: 빨
-11) 신호등: 주
-12) 신호등: 초 
-13) 정적장애물(차)
-"""
-
+    return mapping.get(label, Status.go) # mapping이 없을 때는 기본적으로 go를 반환
