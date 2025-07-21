@@ -6,7 +6,8 @@ import camera
 from enum import Enum
 from config import *
 from vision.cv_module import get_cv_status
-
+import time
+from vision import CNN
 
 status = Status.go # 초기 상태를 전진(go)로 설정
 afb.gpio.init() # GPIO 초기화 및 global.pi 설정
@@ -18,28 +19,6 @@ afb.camera.init(640, 480, 30) # 카메라 초기화를 진행해줌
 frame = afb.camera.get_image() # 카메라로부터 프레임을 가져옴
 cv_status = get_cv_status(frame) # OpenCV로부터 상태를 결정
 
-
-def decide_final_status(cv_status, cnn_status): # Status class, stop_count 반환
-    # 1. stop 누적 판단 따로 처리
-    if cnn_status == Status.stop:
-        stop_count += 1
-        if stop_count >= stop_threshold:
-            return Status.stop, stop_count
-        else:
-            return Status.decelerate, stop_count # 일단 stop 시그널을 보냈을 때, 감속하는 방식으로
-
-    stop_count = 0
-
-    # 2. 우선순위 순회
-    for source, rule_status in PRIORITY_RULES:
-        if source == "cnn" and cnn_status == rule_status:
-            return rule_status, stop_count
-        if source == "both" and cnn_status == rule_status and cv_status == rule_status: # both일 때, 가중치를 두기
-            return rule_status, stop_count
-            # 굳이 같을 때 하지 않고, ex) cv = go cnn = right 라면 steering angle만 변화를 주면 될듯
-    return Status.go, stop_count # 일단 두 상태가 다른 경우에는 go라고 코드가 작성되어 있음. 추후 변경
-
-
 try:
     while True:
         # Flask 웹서버 안열어도 되고, # 카메라 입력 필요없음
@@ -47,13 +26,12 @@ try:
         # openCV 인자를 받음 A가 만들어라
         # CNN 인자를 받음 B가 만들어라
         # 메소드 def decide_final_status를 통해 status 결정하기
-        cv_status =  """vision/openCV로 받는 데이터 : return speed, steering_angle"""
-        cnn_status = """"vison/CNN로 받는 데이터 return speed,steering_angle, status""" 
-        status, stop_count = decide_final_status(cv_status, cnn_status) # status 결정 match문에 사용
         
 
-
-
+        cv_status =  """vision/openCV로 받는 데이터 : return speed, steering_angle"""
+        cnn_status = CNN.get_cnn_status() # class Status 객체를 받음
+        status, stop_count = decide_final_status(cv_status, cnn_status) # status 결정 match문에 사용
+        
 # 결정된 status로부터 차량을 제어하는 logic -> 구체적인 코드만 작성하면 됨
         match status : 
             case Status.go : 
@@ -72,7 +50,6 @@ try:
                 motor.front_stop()
                 motor.rear_stop() 
             case Status.avoid:
-<<<<<<< HEAD
                 #------------------------------------------------------------
                  # 1) 감속(decelerate 속도) 유지
                 speed = 150
@@ -104,9 +81,6 @@ try:
                 motor.rear_forward(speed, recover_angle)
                 time.sleep(0.5)
                 #------------------------------------------------------------
-=======
-                """ avoid code """ # 아직 구현이 안된 코드 
->>>>>>> b2ccf1f3414c0c4a32badd64528203909af95c6f
             case Status.accelerate:
                 motor.front_forward(200) # speed up -> 속도는 이후 조정
                 motor.rear_forward(200) 
