@@ -6,6 +6,7 @@ import camera
 from enum import Enum
 from config import *
 from vision.cv_module import get_cv_status
+from vision.CNN import get_cnn_status
 
 
 status = Status.go # 초기 상태를 전진(go)로 설정
