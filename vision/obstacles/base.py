@@ -114,5 +114,5 @@ class StaticCar(Obstacle):
             print("[Action] 정적 장애물 감지 -> 감속")
             motor.front_forward(100, 90)
             motor.rear_forward(100, 90)
-# 회피 알고리즘 요약 정지 
-# → 후진 + 조향 → 전진 + 같은 조향 → 조향 초기화
+# 회피 알고리즘 요약 
+# 정지 → 후진 + 조향 → 전진 + 같은 조향 → 조향 초기화
