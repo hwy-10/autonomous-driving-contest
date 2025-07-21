@@ -1,11 +1,16 @@
 from ultralytics import YOLO
 from enum import Enum
+from config import Status
 
 """
 YOLO 모델이 예측한 YOLO_label을 뱉어줌
 e.g> detected_cls_ids = [1, 9, 10]
 """
+model = YOLO("yolov8n.pt")  # YOLO 모델 로드
 
+def detect_yolo_class_ids(frame):
+    results = model(frame)[0]  # YOLO 모델로부터 결과 추출
+    return [int(cls_id) for cls_id in results.boxes.cls.tolist()]
 
 
 class YOLO_label(Enum): # 크게 보면 go, back, stop 
@@ -79,18 +84,19 @@ def _detect_class_id():
         return []
 
 # 탐지된 class id 중에서 가장 우선순위가 높은 Enum 객체를 반환하는 함수
-def _decide_highest_priority(): # Enum 객체를 반환
+def _decide_highest_priority(detected_cls_ids)->YOLO_label: # Enum 객체를 반환
     """
     감지된 클래스 ID들 중에서 PRIORITY 리스트에서 가장 우선순위가 높은 것을 선택.
     """
     detected_cls_ids = _detect_class_id()
-
     for label in PRIORITY:
         if label.value in detected_cls_ids:
-            return label  # 가장 높은 우선순위 클래스 반환
-    return None  # 해당 없음
+            return label
+    return None
 
 # decide_hightest_priority를 통해 결정된 label을 넣어서 취해야할 action을 결정
+# YoLo_label -> 행동 문자열 mapping
+
 def decide_action(label: YOLO_label) -> str:
     mapping = {
     YOLO_label.sign_stop: Status.stop,
@@ -115,6 +121,31 @@ def decide_action(label: YOLO_label) -> str:
 
     }
     return mapping.get(label, "go")
+
+
+def action_to_status(action: str) -> 'Status':
+     mapping = {
+        "go": Status.go,
+        "left": Status.left,
+        "right": Status.right,
+        "stop": Status.stop,
+        "avoid": Status.avoid,
+        "accelerate": Status.accelerate,
+        "decelerate": Status.decelerate
+    }
+    return mapping.get(action, Status.go)
+
+# 최종 CNN 기반 status 추출 함수
+def get_cnn_status(frame) -> Status:
+    detected_cls_ids = detect_yolo_class_ids(frame)  # YOLO로부터 감지된 클래스 ID 리스트
+    label = decide_highest_priority(detected_cls_ids)  # 가장 우선순위가 높은 label 선택
+    if label is None:
+        return Status.go
+    
+    action = decide_action(label)  # 해당 label에 따른 행동 결정
+    status = action_to_status(action)
+    return status
+
 
 """
 class: YOLO
