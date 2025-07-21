@@ -22,7 +22,8 @@ try:
         # 여기에 카메라 입력을 받아서 처리하는 코드 작성
         # openCV 인자를 받음 A가 만들어라
         # CNN 인자를 받음 B가 만들어라
-        cv_status =  """vision/openCV로 받는 데이터 : return speed, steering_angle"""
+        cv_status =  get_cv_status()
+        """vision/openCV로 받는 데이터 : return speed, steering_angle"""
         cnn_status = """"vison/CNN로 받는 데이터 return speed,steering_angle, status""" 
         status, stop_count = decide_final_status(cv_status, cnn_status) # status 결정 match문에 사용
 

@@ -31,7 +31,7 @@ def decide_final_status(cv_status, cnn_status): # Status class, stop_count 반�
         if stop_count >= stop_threshold:
             return Status.stop, stop_count
         else:
-            return Status.decelerate, stop_count # 일단 stop 시그널을 보냈을 때, 감속하는 방식으로
+            return Status.decelerate, stop_count # 일단 stop 시그널을 보냈을 때, 감속하는 방식으로 -> 감속없이 이전 상태 유지로
 
     stop_count = 0
 
