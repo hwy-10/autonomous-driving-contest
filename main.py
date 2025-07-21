@@ -48,7 +48,7 @@ try:
                 #------------------------------------------------------------
                  # 1) 감속(decelerate 속도) 유지
                 speed = 150
-
+ 
                 # 2) 장애물 위치 파악 (CNN)
                 frame = camera.get_image()
                 detections = CNN.detect_objects(frame)

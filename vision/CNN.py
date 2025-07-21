@@ -1,9 +1,63 @@
+from ultralytics import YOLO
 from enum import Enum
-
+from . import camera
+import cv2
 """
 YOLO 모델이 예측한 YOLO_label을 뱉어줌
 e.g> detected_cls_ids = [1, 9, 10]
 """
+
+model = YOLO("best.pt") # 이 YOLO 모델을 학습 시킬 예정
+
+
+def _get_image(): # resize된 사진을 return 해주는 내부 함수
+    frame = camera.get_image
+    frame = cv2.resize(frame, (640, 480))
+    return frame
+
+def detect_class_id():
+    try:
+        frame = _get_image()
+        if frame is None:
+            print("❌ 프레임을 가져오지 못했습니다.")
+            return []
+
+        result = model(frame)[0]
+        detected_cls_ids = []
+
+        for box in result.boxes:
+            cls_id = int(box.cls[0])
+            detected_cls_ids.append(cls_id)
+
+            conf = float(box.conf[0])
+            label = model.names[cls_id]
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(frame, f"{label} {conf:.2f}", (x1, y1 - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1)
+
+        return detected_cls_ids
+
+    except Exception as e:
+        print("❌ YOLO 예측 오류:", e)
+        return []
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -20,7 +74,7 @@ class YOLO_label(Enum): # 크게 보면 go, back, stop
     red_light = 9
     yellow_light = 10
     green_light = 11
-    car = 12
+    car = 12 # 정적 장애물 
 # 차량 운행 알고리즘에 따라 label 변경 가능
 
 
