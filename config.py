@@ -24,22 +24,24 @@ PRIORITY_RULES = [
         ("both", Status.right)
     ]
 
-def decide_final_status(cv_status, cnn_status): # Status class, stop_count 반환
+def decide_final_status(cv_status, cnn_status, steering_angle): # Status class, stop_count 반환
     # 1. stop 누적 판단 따로 처리
     if cnn_status == Status.stop:
         stop_count += 1
         if stop_count >= stop_threshold:
-            return Status.stop, stop_count
+            return Status.stop, stop_count, steering_angle
         else:
-            return Status.decelerate, stop_count # 일단 stop 시그널을 보냈을 때, 감속하는 방식으로 -> 감속없이 이전 상태 유지로
+            return Status.decelerate, stop_count, steering_angle # 일단 stop 시그널을 보냈을 때, 감속하는 방식으로
 
     stop_count = 0
 
     # 2. 우선순위 순회
     for source, rule_status in PRIORITY_RULES:
         if source == "cnn" and cnn_status == rule_status:
-            return rule_status, stop_count
-        if source == "both" and cnn_status == rule_status and cv_status == rule_status: # both일 때, 가중치를 두기
-            return rule_status, stop_count
+            return rule_status, stop_count, steering_angle
+        if source == "both" and cnn_status == rule_status and cv_status == rule_status: 
+            # both => 좌회전/직진 or 직진/우회전 case가 다수 좌회전, 우회전 case 적을 것으로 예상
+            return rule_status, stop_count, steering_angle
             # 굳이 같을 때 하지 않고, ex) cv = go cnn = right 라면 steering angle만 변화를 주면 될듯
-    return Status.go, stop_count # 일단 두 상태가 다른 경우에는 go라고 코드가 작성되어 있음. 추후 변경
+        else :
+            return cnn_status, stop_count, (90 + (steering_angle-90)/2) # 예로 들어서, 110도 -> 100도, 70도 -> 80도

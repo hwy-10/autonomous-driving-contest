@@ -2,6 +2,9 @@ from ultralytics import YOLO
 from enum import Enum
 from config import Status
 
+from . import camera
+import cv2
+from config import Status
 """
 YOLO 모델이 예측한 YOLO_label을 뱉어줌
 e.g> detected_cls_ids = [1, 9, 10]
@@ -12,6 +15,7 @@ def detect_yolo_class_ids(frame):
     results = model(frame)[0]  # YOLO 모델로부터 결과 추출
     return [int(cls_id) for cls_id in results.boxes.cls.tolist()]
 
+model = YOLO("best.pt") # 이 YOLO 모델을 학습 시킬 예정
 
 class YOLO_label(Enum): # 크게 보면 go, back, stop 
     left = 0
@@ -51,14 +55,8 @@ PRIORITY = [
     YOLO_label.right   
 ]
 
-def _get_image(): # resize된 사진을 return 해주는 내부 함수
-    frame = camera.get_image
-    frame = cv2.resize(frame, (640, 480))
-    return frame
-
-def _detect_class_id():
+def _detect_class_id(frame):
     try:
-        frame = _get_image()
         if frame is None:
             print("❌ 프레임을 가져오지 못했습니다.")
             return []
@@ -89,6 +87,12 @@ def _decide_highest_priority(detected_cls_ids)->YOLO_label: # Enum 객체를 반
     감지된 클래스 ID들 중에서 PRIORITY 리스트에서 가장 우선순위가 높은 것을 선택.
     """
     detected_cls_ids = _detect_class_id()
+def _decide_highest_priority(frame): # Enum 객체를 반환
+    """
+    감지된 클래스 ID들 중에서 PRIORITY 리스트에서 가장 우선순위가 높은 것을 선택.
+    """
+    detected_cls_ids = _detect_class_id(frame)
+
     for label in PRIORITY:
         if label.value in detected_cls_ids:
             return label
@@ -98,6 +102,9 @@ def _decide_highest_priority(detected_cls_ids)->YOLO_label: # Enum 객체를 반
 # YoLo_label -> 행동 문자열 mapping
 
 def decide_action(label: YOLO_label) -> str:
+def get_cnn_status(frame) -> Status:
+    label = _decide_highest_priority(frame)
+
     mapping = {
     YOLO_label.sign_stop: Status.stop,
     YOLO_label.red_light: Status.stop,
@@ -113,12 +120,9 @@ def decide_action(label: YOLO_label) -> str:
     YOLO_label.hill_up: Status.accelerate,
     YOLO_label.hill_down: Status.decelerate,
 
-    YOLO_label.left: "left",
-    YOLO_label.straight: "go",
-    YOLO_label.right: "right"
-
-# all action: go, left, right, stop, avoid, accel, decel 총 7개 상태
-
+    YOLO_label.left: Status.left,
+    YOLO_label.straight: Status.go,
+    YOLO_label.right: Status.right
     }
     return mapping.get(label, "go")
 
@@ -163,4 +167,3 @@ class: YOLO
 12) 신호등: 초 
 13) 정적장애물(차)
 """
-

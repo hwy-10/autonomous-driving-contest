@@ -6,17 +6,13 @@ import camera
 from enum import Enum
 from config import *
 from vision.cv_module import get_cv_status
-
+import time
+from vision.CNN import get_cnn_status
+import cv2
 
 status = Status.go # 초기 상태를 전진(go)로 설정
 afb.gpio.init() # GPIO 초기화 및 global.pi 설정
-
-stop_count = 0
-stop_threshold = 3
-
 afb.camera.init(640, 480, 30) # 카메라 초기화를 진행해줌
-frame = afb.camera.get_image() # 카메라로부터 프레임을 가져옴
-cv_status = get_cv_status(frame) # OpenCV로부터 상태를 결정
 
 try:
     while True:
@@ -26,10 +22,11 @@ try:
         # CNN 인자를 받음 B가 만들어라
         # 메소드 def decide_final_status를 통해 status 결정하기
         
-
-        cv_status =  """vision/openCV로 받는 데이터 : return speed, steering_angle"""
-        cnn_status = CNN.get_cnn_status() # class Status 객체를 받음
-        status, stop_count = decide_final_status(cv_status, cnn_status) # status 결정 match문에 사용
+        frame = afb.camera.get_image() # 카메라로부터 프레임을 가져옴
+        frame = cv2.resize(frame, (640, 480)) # reframe
+        cv_status, steering_angle =  get_cv_status() # OpenCV로부터 상태를 결정
+        cnn_status = get_cnn_status(frame) # class Status 객체를 받음
+        status, stop_count, steering_angle = decide_final_status(cv_status, cnn_status, steering_angle) # status 결정 match문에 사용
         
 # 결정된 status로부터 차량을 제어하는 logic -> 구체적인 코드만 작성하면 됨
         match status : 
@@ -37,11 +34,11 @@ try:
                 motor.front_forward(180) # speed, angle = 90
                 motor.rear_forward(180) # speed, angle = 90
             case Status.left : 
-                motor.front_forward(180, 45) # speed, angle = 45 // angle의 경우 위에서 따로 정의해서 PID 제어할것
-                motor.rear_forward(180, 45)
+                motor.front_forward(180, steering_angle) # speed, angle = 45 // angle의 경우 위에서 따로 정의해서 PID 제어할것
+                motor.rear_forward(180, steering_angle)
             case Status.right : 
-                motor.front_forward(180, 135)
-                motor.rear_forward(180, 45)
+                motor.front_forward(180, steering_angle)
+                motor.rear_forward(180, steering_angle)
             case Status.back :
                 motor.front_backward(180) # speed, angle = 90
                 motor.rear_backward(180) # speed, angle = 90
@@ -81,11 +78,11 @@ try:
                 time.sleep(0.5)
                 #------------------------------------------------------------
             case Status.accelerate:
-                motor.front_forward(200) # speed up -> 속도는 이후 조정
-                motor.rear_forward(200) 
+                motor.front_forward(200, steering_angle) # speed up -> 속도는 이후 조정
+                motor.rear_forward(200, steering_angle) 
             case Status.decelerate:
-                motor.front_forward(150) # speed down -> 속도는 이후 조정
-                motor.rear_forward(150)
+                motor.front_forward(150, steering_angle) # speed down -> 속도는 이후 조정
+                motor.rear_forward(150, steering_angle)
 
 
 
