@@ -17,11 +17,12 @@ class YOLO_label(Enum): # 크게 보면 go, back, stop
     sign_right = 6
     sign_tunnel= 7
     sign_stop = 8 # 차단기
-    red_light = 9 
+    red_light = 9
     yellow_light = 10
     green_light = 11
     car = 12
 # 차량 운행 알고리즘에 따라 label 변경 가능
+
 
 # 우선순위를 list로 관리
 PRIORITY = [
@@ -78,8 +79,7 @@ def decide_action(label: YOLO_label) -> str:
 # all action: go, left, right, stop, avoid, accel, decel 총 7개 상태
 
     }
-
-
+    return mapping.get(label, "go")
 
 """
 class: YOLO

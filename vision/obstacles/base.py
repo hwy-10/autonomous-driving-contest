@@ -1,3 +1,6 @@
+import motor_control as motor
+
+
 class Obstacle:
     def __init__(self, label, priority = 0):
         self.label = label
@@ -11,7 +14,8 @@ class TurnLeft(Obstacle):
         super().__init__("좌회전", priority=1)
 
     def action(self):
-        return "좌회전 실행"
+        print("좌회전 실행")
+        motor.front_forward(150, 120)   # 속도 150, 각도 120으로 좌회전
 
 class TurnRight(Obstacle):
     def __init__(self):
@@ -68,3 +72,4 @@ class StaticCar(Obstacle):
             return "정적 장애물 감지 → 정지 또는 회피"
         else:
             return "정적 장애물 감지 → 감속 또는 주시"
+
