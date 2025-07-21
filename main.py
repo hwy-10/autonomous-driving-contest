@@ -1,34 +1,10 @@
-# main loop
 import afb
 import motor_control as motor # motor_control 모듈을 import하여 GPIO 초기화 및 모터 제어 기능을 부름
 import utills # 디버깅용
 import random
 import camera 
 from enum import Enum
-
-class Status(Enum) :
-    go = 0
-    left = 1
-    right = 2
-    back = 3
-    stop = 4
-    avoid = 5
-    accelerate = 6
-    decelerate = 7
-
-PRIORITY_RULES = [
-        ("cnn", Status.stop),
-        ("cnn", Status.avoid),
-        ("cnn", Status.accelerate),
-        ("cnn", Status.decelerate),
-        ("both", Status.go),
-        ("both", Status.left),
-        ("both", Status.right),
-        ("cv", Status.back)
-    ]
-
-# back은 openCV로만 구현 -> 이후 CNN으로도 구현해야 한다면, 구현하기
-# CNN: go, left, right, stop, avoid, accel, decel 총 7개 상태
+from config import *
 
 status = Status.go # 초기 상태를 전진(go)로 설정
 afb.gpio.init() # GPIO 초기화 및 global.pi 설정
@@ -54,12 +30,10 @@ def decide_final_status(cv_status, cnn_status): # Status class, stop_count 반�
     for source, rule_status in PRIORITY_RULES:
         if source == "cnn" and cnn_status == rule_status:
             return rule_status, stop_count
-        if source == "cv" and cv_status == rule_status:
-            return rule_status, stop_count
         if source == "both" and cnn_status == rule_status and cv_status == rule_status: # both일 때, 가중치를 두기
             return rule_status, stop_count
-
-    return Status.go, stop_count
+            # 굳이 같을 때 하지 않고, ex) cv = go cnn = right 라면 steering angle만 변화를 주면 될듯
+    return Status.go, stop_count # 일단 두 상태가 다른 경우에는 go라고 코드가 작성되어 있음. 추후 변경
 
 
 try:
@@ -79,24 +53,28 @@ try:
 # 결정된 status로부터 차량을 제어하는 logic -> 구체적인 코드만 작성하면 됨
         match status : 
             case Status.go : 
-                motor.front_forward()
-                motor.rear_forward()
+                motor.front_forward(180) # speed, angle = 90
+                motor.rear_forward(180) # speed, angle = 90
             case Status.left : 
-                """ left code """
+                motor.front_forward(180, 45) # speed, angle = 45 // angle의 경우 위에서 따로 정의해서 PID 제어할것
+                motor.rear_forward(180, 45)
             case Status.right : 
-                """ right code """
+                motor.front_forward(180, 135)
+                motor.rear_forward(180, 45)
             case Status.back :
-                motor.front_backward()
-                motor.rear_backward()
+                motor.front_backward(180) # speed, angle = 90
+                motor.rear_backward(180) # speed, angle = 90
             case Status.stop :
                 motor.front_stop()
                 motor.rear_stop() 
             case Status.avoid:
-                """ avoid code """
+                """ avoid code """ # 아직 구현이 안된 코드 
             case Status.accelerate:
-                """ accel code """
+                motor.front_forward(200) # speed up -> 속도는 이후 조정
+                motor.rear_forward(200) 
             case Status.decelerate:
-                """ decel code """
+                motor.front_forward(150) # speed down -> 속도는 이후 조정
+                motor.rear_forward(150)
 
 
 
