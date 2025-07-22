@@ -1,7 +1,6 @@
 from ultralytics import YOLO
 from enum import Enum
 from runtime.config import Status
-
 from . import camera
 import cv2
 
