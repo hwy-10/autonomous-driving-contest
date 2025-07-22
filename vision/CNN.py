@@ -76,6 +76,7 @@ def get_cnn_status(frame) -> Status:
 
 def decide_final_status(cnn_status): # Status class, stop_count 반환
     # 1. stop 누적 판단 따로 처리
+    global stop_count
     if cnn_status == Status.stop:
         stop_count += 1
         if stop_count >= stop_threshold:

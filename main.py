@@ -20,7 +20,7 @@ try:
         steering_angle =  get_cv_angle(frame_gray) # OpenCV로부터 조향 결정
         cnn_status = get_cnn_status(frame) # YOLO로부터 상태 결정
 
-        if frame_gray.mean() >= 110: runtime.gpio.led() # 터널에서 빠져나온다면, led를 다시 끈다
+        if frame_gray.mean() >= brightness_threshold: runtime.gpio.led() # 터널에서 빠져나온다면, led를 다시 끈다
         else: runtime.gpio.led(True, True) # 어둡다면, led를 킨다.
         
         status, stop_count = decide_final_status(cnn_status) # status 결정 match문에 사용

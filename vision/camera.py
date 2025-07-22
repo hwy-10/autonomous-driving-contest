@@ -17,32 +17,6 @@ HSV_LOWER = np.array([0, 0, 200])
 HSV_UPPER = np.array([180, 50, 255])
 kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
 
-def init(width=640, height=480, framerate=30): # 해상도를 640x480으로 설정하고 fps를 30으로 설정
-    global _picam2
-    if _picam2 is not None:
-        _picam2.stop()
-    _picam2 = Picamera2()  # 인스턴스를 생성
-    _picam2.configure(
-        _picam2.create_preview_configuration(
-            main={"size": (width, height)}, # 메인 카메라 크기 설정
-            controls={"FrameDurationLimits": (int(1e6 // framerate), int(1e6 // framerate))} # 30fps 설정
-        )
-    )
-    _picam2.start()
-    time.sleep(1)  # Allow camera to warm up
-
-def get_image():
-    if _picam2 is None:
-        raise RuntimeError("Camera not initialized. Call init() first.")
-    return _picam2.capture_array("main")  # Only grab the latest available frame <class 'numpy.ndarray'>
-
-# Release and clean up the camera : 프로그램 종료 시 카메라를 정리(clean-up)할 때 사용하는 함수
-def release_camera():
-    global _picam2
-    if _picam2 is not None:
-        _picam2.stop()
-        _picam2 = None
-
 def hsv_mask(image) : 
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     hsv_mask = cv2.inRange(hsv, HSV_LOWER, HSV_UPPER)

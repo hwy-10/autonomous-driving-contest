@@ -2,6 +2,7 @@ from enum import Enum
 
 stop_count = 0
 stop_threshold = 3
+brightness_threshold = 110
 
 class Status(Enum) :
     go = 0
