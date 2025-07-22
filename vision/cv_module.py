@@ -36,15 +36,16 @@ def warp_image(image, src_pts, dst_size=(640, 480)):
 pid = PIDController(kp=0.5, ki=0.0, kd=0.05)
 prev_cx = None
 
-def get_cv_status(frame):
-    global prev_cx
-    frame = cv2.resize(frame, (640, 480))
+def image_preprocessing(frame): # gray까지 이미지 전처리를 함
     bev = warp_image(frame, src_pts)
-
     gray = cv2.cvtColor(bev, cv2.COLOR_BGR2GRAY)
+    return gray
+
+
+def get_cv_status(gray): # gray부터 이미지 전처리를 함
+    global prev_cx
     blur = cv2.GaussianBlur(gray, (5, 5), 1.5)
     edges = cv2.Canny(blur, 40, 120)
-
     # y좌표별 가중 평균 중심 계산
     target_y_list = [(370, 10), (360, 5), (350, 3), (340, 2)]
     weighted_sum, total_weight, cy_roi = 0, 0, None

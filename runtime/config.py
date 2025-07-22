@@ -13,35 +13,49 @@ class Status(Enum) :
     accelerate = 6
     decelerate = 7
 
-PRIORITY_RULES = [
-        ("cnn", Status.stop),
-        ("cnn", Status.avoid),
-        ("cnn", Status.back)
-        ("cnn", Status.accelerate),
-        ("cnn", Status.decelerate),
-        ("both", Status.go),
-        ("both", Status.left),
-        ("both", Status.right)
+class YOLO_label(Enum): # 크게 보면 go, back, stop 
+    left = 0
+    straight = 1
+    right = 2
+    hill_up = 3
+    hill_down = 4
+    sign_left = 5
+    sign_right = 6
+    sign_tunnel= 7
+    sign_stop = 8 # 차단기
+    red_light = 9
+    yellow_light = 10
+    green_light = 11
+    car = 12 # 정적 장애물 
+# 차량 운행 알고리즘에 따라 label 변경 가능
+
+PRIORITY_RULES= [
+        Status.stop,
+        Status.avoid,
+        # Status.back, # back은 실제로 구현 x 
+        Status.accelerate,
+        Status.decelerate,
+        Status.go,
+        Status.left,
+        Status.right
     ]
 
-def decide_final_status(cv_status, cnn_status, steering_angle): # Status class, stop_count 반환
-    # 1. stop 누적 판단 따로 처리
-    if cnn_status == Status.stop:
-        stop_count += 1
-        if stop_count >= stop_threshold:
-            return Status.stop, stop_count, steering_angle
-        else:
-            return Status.decelerate, stop_count, steering_angle # 일단 stop 시그널을 보냈을 때, 감속하는 방식으로
+PRIORITY = [
+    YOLO_label.sign_stop,
+    YOLO_label.red_light,
+    YOLO_label.car,
 
-    stop_count = 0
+    YOLO_label.yellow_light,
+    YOLO_label.green_light,
 
-    # 2. 우선순위 순회
-    for source, rule_status in PRIORITY_RULES:
-        if source == "cnn" and cnn_status == rule_status:
-            return rule_status, stop_count, steering_angle
-        if source == "both" and cnn_status == rule_status and cv_status == rule_status: 
-            # both => 좌회전/직진 or 직진/우회전 case가 다수 좌회전, 우회전 case 적을 것으로 예상
-            return rule_status, stop_count, steering_angle
-            # 굳이 같을 때 하지 않고, ex) cv = go cnn = right 라면 steering angle만 변화를 주면 될듯
-        else :
-            return cnn_status, stop_count, (90 + (steering_angle-90)/2) # 예로 들어서, 110도 -> 100도, 70도 -> 80도
+    YOLO_label.sign_tunnel,
+    YOLO_label.sign_left,
+    YOLO_label.sign_right,
+
+    YOLO_label.hill_up,
+    YOLO_label.hill_down,
+
+    YOLO_label.left,
+    YOLO_label.straight,
+    YOLO_label.right   
+]

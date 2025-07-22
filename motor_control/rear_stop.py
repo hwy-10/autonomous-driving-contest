@@ -1,7 +1,7 @@
 import lgpio
 import atexit
-from afb import gpio
-from afb._gpio_pins import PINS # 핀 정의 
+from runtime import gpio
+from runtime._gpio_pins import PINS # 핀 정의 
 
 def rear_stop():
     IN1, IN2, PWM = PINS.M2_IN1, PINS.M2_IN2, PINS.M2_PWM # TB6612FNG M2 핀 정의

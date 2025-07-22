@@ -1,37 +1,31 @@
-from vision import camera
-from vision import CNN
-from vision import Lanepilot
-import motor_control
-import time
+import cv2
+from motor_control.front_forward import front_forward
+from motor_control.rear_forward import rear_forward
+from runtime.gpio import led 
+def avoid(gray) : # 왼쪽과 오른쪽 차선 중 점선 부분으로 회피
+    h, w = gray.shape[:2]
+    # 1. Threshold
+    _, binary = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY)
 
-def avoid() :
-               # 1) 감속(decelerate 속도) 유지
-                speed = 150
- 
-                # 2) 장애물 위치 파악 (CNN)
-                frame = camera.get_image()
-                detections = CNN.detect_objects(frame)
-                obstacle = next((bbox for lbl, bbox in detections if lbl == CNN.YOLO_label.car), None)
-                obj_cx = Lanepilot.CENTER_X if obstacle is None else obstacle[0] + obstacle[2] // 2 
+    # 2. ROI: 아래쪽 부분만 추출
+    roi = binary[int(h*0.6):h, :]
 
-                # 3) 장애물 반대 방향으로 회피 각도 계산
-                if obj_cx < Lanepilot.CENTER_X:
-                    avoid_angle = 135  # 장애물이 왼쪽 → 우회전
-                else:
-                    avoid_angle = 45   # 장애물이 오른쪽 → 좌회전
+    # 3. 왼쪽/오른쪽 나눠서 점선 개수 카운트
+    left_half = roi[:, :w//2]
+    right_half = roi[:, w//2:]
 
-                # 4) 원래 위치(직진 90°)에서 벗어난 만큼 보정 각도 계산
-                #    offset = avoid_angle - 90, recover_angle = 90 - offset
-                offset = avoid_angle - 90
-                recover_angle = 90 - offset
+    left_count = cv2.countNonZero(left_half)
+    right_count = cv2.countNonZero(right_half)
 
-                # 5) 1차 회피: 감속 + 조향
-                motor_control.front_forward(speed, avoid_angle)
-                motor_control.rear_forward(speed, avoid_angle)
-                time.sleep(0.5)
-
-                # 6) 2차 복귀: 감속 + 역조향
-                motor_control.front_forward(speed, recover_angle)
-                motor_control.rear_forward(speed, recover_angle)
-                time.sleep(0.5)
-                #------------------------------------------------------------
+    if left_count > right_count * 1.3:
+        led(True, False)
+        front_forward(180, 60)
+        rear_forward(180, 60)
+    elif right_count > left_count * 1.3:
+        led(False, True)
+        front_forward(180, 120)
+        rear_forward(180, 120)
+    else: 
+        front_forward(180)
+        rear_forward(180)
+        print("aviod else case")
