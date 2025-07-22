@@ -3,7 +3,7 @@ from runtime.config import * # Status 이용을 위한 import
 import cv2
 import motor_control as motor # motor_control 모듈을 import하여 GPIO 초기화 및 모터 제어 기능을 부름
 import utills # 디버깅용
-from vision.cv_module import get_cv_status, image_preprocessing
+from vision.cv_module import get_cv_angle, image_preprocessing
 from vision.CNN import get_cnn_status, decide_final_status
 
 # main을 위한 초기화 
@@ -17,12 +17,12 @@ try:
     while True:
         frame = runtime.camera.get_image() # 카메라로부터 프레임을 가져옴
         frame_gray = image_preprocessing(frame)
-        steering_angle =  get_cv_status(frame_gray) # OpenCV로부터 조향 결정
-        steering_angle = """decide_final_angle"""
-
+        steering_angle =  get_cv_angle(frame_gray) # OpenCV로부터 조향 결정
         cnn_status = get_cnn_status(frame) # YOLO로부터 상태 결정
+
         if frame_gray.mean() >= 110: runtime.gpio.led() # 터널에서 빠져나온다면, led를 다시 끈다
         else: runtime.gpio.led(True, True) # 어둡다면, led를 킨다.
+        
         status, stop_count = decide_final_status(cnn_status) # status 결정 match문에 사용
         
         # 결정된 status와 steering_angle에 따라 차량 제어

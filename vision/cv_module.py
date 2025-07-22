@@ -41,8 +41,7 @@ def image_preprocessing(frame): # gray까지 이미지 전처리를 함
     gray = cv2.cvtColor(bev, cv2.COLOR_BGR2GRAY)
     return gray
 
-
-def get_cv_status(gray): # gray부터 이미지 전처리를 함
+def get_cv_angle(gray): # gray부터 이미지 전처리를 함
     global prev_cx
     blur = cv2.GaussianBlur(gray, (5, 5), 1.5)
     edges = cv2.Canny(blur, 40, 120)
@@ -60,7 +59,7 @@ def get_cv_status(gray): # gray부터 이미지 전처리를 함
             cy_roi = cy
 
     if total_weight == 0:
-        return Status.go, ANGLE_CENTER  # 차선 인식 실패 → 직진
+        return ANGLE_CENTER  # 차선 인식 실패 → 직진
 
     cx_weighted = int(weighted_sum / total_weight)
     smooth_cx = int(pid.update(prev_cx or cx_weighted, cx_weighted))
@@ -72,8 +71,8 @@ def get_cv_status(gray): # gray부터 이미지 전처리를 함
     angle = np.clip(angle, 45, 135)
 
     if error < -20:
-        return Status.left, angle
+        return angle
     elif error > 20:
-        return Status.right, angle
+        return angle
     else:
-        return Status.go, angle
+        return angle
