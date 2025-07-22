@@ -1,10 +1,9 @@
 from ultralytics import YOLO
 from enum import Enum
-from config import Status
-
+from runtime.config import Status
 from . import camera
 import cv2
-from config import Status
+
 """
 YOLO 모델이 예측한 YOLO_label을 뱉어줌
 e.g> detected_cls_ids = [1, 9, 10]
@@ -102,6 +101,7 @@ def _decide_highest_priority(frame): # Enum 객체를 반환
 # YoLo_label -> 행동 문자열 mapping
 
 def decide_action(label: YOLO_label) -> str:
+
 def get_cnn_status(frame) -> Status:
     label = _decide_highest_priority(frame)
 
