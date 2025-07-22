@@ -1,8 +1,7 @@
 # 좌/직/우에 대한 벡터값 -> 속도 및 방향 결정
-from config import Status
+from runtime.config import Status
+from CNN import _decide_highest_priority, decide_action, action_to_status
 
-from CNN import decide_highest_priority, decide_action, action_to_status
-from vision.yolo_detector import detect_yolo_class_ids
 
 def get_cnn_status(frame):
     try:
@@ -22,4 +21,3 @@ def get_cnn_status(frame):
     except Exception as e:
         print(f"[ERROR] CNN Status 처리 중 오류 발생: {e}")
         return Status.go
-

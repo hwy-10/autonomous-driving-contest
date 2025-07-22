@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from config import Status
+from runtime.config import Status
 
 # 조향 각도 관련 상수
 ANGLE_CENTER = 90
