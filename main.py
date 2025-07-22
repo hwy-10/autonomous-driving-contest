@@ -1,31 +1,25 @@
-import afb
+import runtime # 초기화 등 runtime에 필요한 함수를 import
+from runtime.status import * # Status 이용을 위한 import
 import cv2
 import motor_control as motor # motor_control 모듈을 import하여 GPIO 초기화 및 모터 제어 기능을 부름
 import utills # 디버깅용
-import camera 
-from config import *
 from vision.cv_module import get_cv_status
 from vision.CNN import get_cnn_status
 
+# main을 위한 초기화 
 status = Status.go # 초기 상태를 전진(go)로 설정
-afb.gpio.init() # GPIO 초기화 및 global.pi 설정
-afb.camera.init(640, 480, 30) # 카메라 초기화를 진행해줌
+runtime.gpio.init() # GPIO 초기화 및 global.pi 설정
+runtime.camera.init(640, 480, 30) # 카메라 초기화를 진행해줌
 
+# 반복문: 차량 진행 상태 결정 
 try:
     while True:
-        # Flask 웹서버 안열어도 되고, # 카메라 입력 필요없음
-        # 여기에 카메라 입력을 받아서 처리하는 코드 작성
-        # openCV 인자를 받음 A가 만들어라
-        # CNN 인자를 받음 B가 만들어라
-        # 메소드 def decide_final_status를 통해 status 결정하기
-        
-        frame = afb.camera.get_image() # 카메라로부터 프레임을 가져옴
-        frame = cv2.resize(frame, (640, 480)) # reframe
+        frame = runtime.camera.get_image() # 카메라로부터 프레임을 가져옴
         cv_status, steering_angle =  get_cv_status(frame) # OpenCV로부터 상태를 결정
         cnn_status = get_cnn_status(frame) # class Status 객체를 받음
         status, stop_count, steering_angle = decide_final_status(cv_status, cnn_status, steering_angle) # status 결정 match문에 사용
         
-# 결정된 status로부터 차량을 제어하는 logic -> 구체적인 코드만 작성하면 됨
+        # 결정된 status와 steering_angle에 따라 차량 제어
         match status : 
             case Status.go : 
                 motor.front_forward(180) # speed, angle = 90
@@ -51,19 +45,9 @@ try:
                 motor.front_forward(150, steering_angle) # speed down -> 속도는 이후 조정
                 motor.rear_forward(150, steering_angle)
 
-
-
-
-except KeyboardInterrupt: # 
+except KeyboardInterrupt: 
     print("사용자 종료")
 
 finally:
-    afb.gpio.stop_all()
-
-
-
-
-
-
-
-# afb -> runtime/ 으로 변경
+    runtime.gpio.stop_all()
+    runtime.camera.release_camera()
