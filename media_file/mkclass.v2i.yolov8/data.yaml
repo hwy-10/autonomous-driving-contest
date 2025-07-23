@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 13
+names: ['car', 'green_light', 'hill_down', 'hill_up', 'left', 'red_light', 'right', 'sign_left', 'sign_right', 'sign_stop', 'sign_tunnel', 'straight', 'yellow_light']
+
+roboflow:
+  workspace: hwy10
+  project: mkclass-5si0n
+  version: 2
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/hwy10/mkclass-5si0n/dataset/2
