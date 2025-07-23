@@ -11,7 +11,11 @@ except Exception as e:
     exit()
 
 # 2. 영상 로드
+<<<<<<< HEAD
 video_path = "C:/Users/user/Desktop/활동/미제연 자율주행/git-clones/autonomous-driving-contest/assignment1/roadcam.mp4"
+=======
+video_path = "E:/dev_in_E/git-clones-E/autonomous-driving-contest/assignment1/roadcam.mp4"
+>>>>>>> 3d675100b5e1db49dd8eb9809cc7f083c5721bd2
 cap = cv2.VideoCapture(video_path)
 if not cap.isOpened():
     print("❌ 비디오 로드 실패:", video_path)

@@ -18,7 +18,6 @@ bg_subtractor = cv2.createBackgroundSubtractorMOG2()
 
 # 비디오 로드
 video_path = "../media_file/dog.mp4"
-
 cap = cv2.VideoCapture(video_path)
 if not cap.isOpened():
     print("❌ 비디오 로드 실패:", video_path)
