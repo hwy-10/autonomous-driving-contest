@@ -1,7 +1,7 @@
 import lgpio
 import atexit
-from runtime import gpio
-from runtime._gpio_pins import PINS # 핀 정의 
+from afb import gpio
+from afb._gpio_pins import PINS # 핀 정의 
 
 
 def front_forward(speed = 0, angle = 90):

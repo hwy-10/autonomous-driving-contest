@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 1
+names: ['objects']
+
+roboflow:
+  workspace: dding
+  project: proj1-ekqft
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/dding/proj1-ekqft/dataset/1
