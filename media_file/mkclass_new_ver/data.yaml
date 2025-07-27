@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 15
+names: ['car', 'go', 'green_light', 'hill_down', 'hill_up', 'in_tunnel', 'left', 'red_light', 'right', 'sign_left', 'sign_right', 'sign_stop', 'sign_tunnel', 'straight', 'yellow_light']
+
+roboflow:
+  workspace: dding
+  project: mkclass-5si0n-y0upe
+  version: 2
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/dding/mkclass-5si0n-y0upe/dataset/2
