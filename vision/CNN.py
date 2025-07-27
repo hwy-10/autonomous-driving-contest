@@ -3,8 +3,11 @@ from ultralytics import YOLO
 from enum import Enum
 from runtime.config import *
 from runtime import camera
+import os
 
-model = YOLO("best.pt") # 이 YOLO 모델을 학습 시킬 예정 main에서 vision을 import 시 자동으로 모델이 로드되게 설정
+current_dir = os.path.dirname(os.path.abspath(__file__))
+model_path = os.path.join(current_dir, "best.pt")
+model = YOLO(model_path) # 이 YOLO 모델을 학습 시킬 예정 main에서 vision을 import 시 자동으로 모델이 로드되게 설정
 
 
 def _detect_class_id(frame):
