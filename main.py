@@ -6,6 +6,7 @@ import utills # 디버깅용
 from vision.cv_module import get_cv_angle, image_preprocessing
 from vision.CNN import get_cnn_status, decide_final_status
 from runtime import gpio    # 추가
+# import threading
 
 # main을 위한 초기화 
 status = Status.go # 초기 상태를 전진(go)로 설정
@@ -13,7 +14,7 @@ runtime.gpio.init() # GPIO 초기화 및 global.pi 설정
 runtime.camera.init(640, 480, 30) # 카메라 초기화를 진행해줌
 runtime.gpio.led() # 초기 led를 끈 상태로 시작
 
-threading.Thread(target=start_server, daemon=True).start() # Flask 서버를 백그라운드에서 실행
+# threading.Thread(target=start_server, daemon=True).start() # Flask 서버를 백그라운드에서 실행
 
 # 반복문: 차량 진행 상태 결정 
 try:
@@ -27,7 +28,7 @@ try:
         else: runtime.gpio.led(True, True) # 어둡다면, led를 킨다.
         
         status, stop_count = decide_final_status(cnn_status) # status 결정 match문에 사용
-        update_state(status, steering_angle)   # Flask 서버에 상태 업데이트
+        # update_state(status, steering_angle)   # Flask 서버에 상태 업데이트
         
         # 결정된 status와 steering_angle에 따라 차량 제어
         match status : 
