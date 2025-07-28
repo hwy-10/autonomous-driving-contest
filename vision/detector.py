@@ -1,5 +1,5 @@
-from obstacles.base import *
-from yolo_enum import YOLO_label
+from .obstacles.base import *
+from runtime.config import YOLO_label
 
 def label_to_obstacle(label: YOLO_label):
      match label:

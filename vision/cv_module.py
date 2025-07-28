@@ -41,13 +41,15 @@ def image_preprocessing(frame): # gray까지 이미지 전처리를 함
     gray = cv2.cvtColor(bev, cv2.COLOR_BGR2GRAY)
     return gray
 
-def get_cv_angle(gray): # gray부터 이미지 전처리를 함
+def get_cv_angle(gray):  # gray 이미지를 기반으로 조향 각도 계산
     global prev_cx
     blur = cv2.GaussianBlur(gray, (5, 5), 1.5)
     edges = cv2.Canny(blur, 40, 120)
+
     # y좌표별 가중 평균 중심 계산
     target_y_list = [(370, 10), (360, 5), (350, 3), (340, 2)]
     weighted_sum, total_weight, cy_roi = 0, 0, None
+
     for y_val, weight in target_y_list:
         roi = edges[y_val:y_val+20, :]
         M_roi = cv2.moments(roi)
@@ -58,21 +60,31 @@ def get_cv_angle(gray): # gray부터 이미지 전처리를 함
             total_weight += weight
             cy_roi = cy
 
+    # 차선 중심 인식 실패한 경우: angle = 90 고정
     if total_weight == 0:
-        return ANGLE_CENTER  # 차선 인식 실패 → 직진
+        print("❌ 차선 인식 실패 → 90도 고정")
+        return ANGLE_CENTER
 
+    # 차선 중심 인식 성공한 경우: PID 보정 및 angle 계산
     cx_weighted = int(weighted_sum / total_weight)
     smooth_cx = int(pid.update(prev_cx or cx_weighted, cx_weighted))
     prev_cx = smooth_cx
 
-    error = smooth_cx - 320
+    error = smooth_cx - 320  # 이미지 중심 기준 오차
     offset_ratio = np.clip(error / 160, -1, 1)
     angle = int(ANGLE_CENTER - offset_ratio * MAX_ANGLE_OFFSET)
     angle = np.clip(angle, 45, 135)
 
-    if error < -20:
-        return angle
-    elif error > 20:
-        return angle
-    else:
-        return angle
+    #  디버깅 출력
+    print(f"▶ 조향 계산 정보 | weighted_cx={cx_weighted}, smoothed_cx={smooth_cx}, error={error}, angle={angle}")
+
+    return angle
+
+
+
+    # if error < -20:
+    #     return angle
+    # elif error > 20:
+    #     return angle
+    # else:
+    #     return angle

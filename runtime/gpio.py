@@ -11,6 +11,13 @@ atexit.register(lambda: stop_all()) # 종료 루틴
 수정 조금 이따가 하자.
 """
 
+try:
+    pi = lgpio.gpiochip_open(0)
+    print(f"[gpio] GPIO 자동 초기화 완료: 핸들 {pi}")
+except Exception as e:
+    print("❌ GPIO 초기화 실패:", e)
+    pi = None
+
 # Initialization
 def init():
     # Motor pins

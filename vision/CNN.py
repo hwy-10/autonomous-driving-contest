@@ -8,13 +8,17 @@ import os
 current_dir = os.path.dirname(os.path.abspath(__file__))
 model_path = os.path.join(current_dir, "best.pt")
 model = YOLO(model_path) # 이 YOLO 모델을 학습 시킬 예정 main에서 vision을 import 시 자동으로 모델이 로드되게 설정
+model = YOLO("vision/best.pt") # 이 YOLO 모델을 학습 시킬 예정 main에서 vision을 import 시 자동으로 모델이 로드되게 설정
 
 
 def _detect_class_id(frame):
     try:
         if frame is None:
             print("❌ 프레임을 가져오지 못했습니다.")
-            return []
+            return [], None
+        
+        if frame.shape[2] == 4:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
 
         result = model(frame)[0]
         detected_cls_ids = []

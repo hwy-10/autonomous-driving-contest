@@ -5,8 +5,7 @@ import motor_control as motor # motor_control 모듈을 import하여 GPIO 초기
 import utills # 디버깅용
 from vision.cv_module import get_cv_angle, image_preprocessing
 from vision.CNN import get_cnn_status, decide_final_status
-import threading # 멀티스레딩을 위한 import
-from runtime.flask_server import start_server, update_state # Flask 서버 시작 및 상태 업데이트를 위한 import
+from runtime import gpio    # 추가
 
 # main을 위한 초기화 
 status = Status.go # 초기 상태를 전진(go)로 설정
@@ -55,6 +54,19 @@ try:
             case Status.decelerate:
                 motor.front_forward(150, steering_angle)
                 motor.rear_forward(150, steering_angle)
+                
+        print("CNN 상태:", cnn_status)  # 디버깅용 출력 추가
+        print("조향 각도:", steering_angle)
+        # print("gpio.pi 핸들:", gpio.pi)
+
+        # 강제 확인
+        ### print("앞바퀴 forward 호출")
+        motor.front_forward(180, steering_angle)
+
+        ### print("뒷바퀴 forward 호출")
+        motor.rear_forward(180, steering_angle)
+
+
 
 except KeyboardInterrupt: 
     print("사용자 종료")

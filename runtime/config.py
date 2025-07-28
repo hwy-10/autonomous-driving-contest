@@ -15,6 +15,7 @@ class Status(Enum) :
     decelerate = 7
 
 class YOLO_label(Enum): # 크게 보면 go, back, stop 
+    none = -1   # 추가
     left = 0
     straight = 1
     right = 2

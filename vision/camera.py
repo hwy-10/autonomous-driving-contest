@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 import time
-import afb
+# import afb
 import sys
 sys.path.append("/usr/lib/python3/dist-packages")  # Add system packages path
 from picamera2 import Picamera2
